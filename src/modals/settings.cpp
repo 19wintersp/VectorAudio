@@ -7,7 +7,6 @@ void vector_audio::modals::Settings::render(afv_native::api::atcClient* mClient,
 {
     // Settings modal definition
     if (ImGui::BeginPopupModal("Settings Panel")) {
-
         ImGuiTableFlags flags = ImGuiTableFlags_ScrollY;
         if (ImGui::BeginTable("settings_table", 2)) {
             ImGui::TableNextRow();
@@ -178,7 +177,7 @@ void vector_audio::modals::Settings::render(afv_native::api::atcClient* mClient,
             ImGui::Button(ptt_key_name.c_str(), ImVec2(-1.0F, 0.0F));
             ImGui::PopItemFlag();
 
-            vector_audio::style::button_blue();
+            vector_audio::style::PushFrameStyle(vector_audio::style::FrameSelected);
             if (shared::capture_ptt_flag) {
                 if (ImGui::Button("Capturing key...", ImVec2(-1.0F, 0.0F))) {
                     shared::capture_ptt_flag = false;
@@ -188,7 +187,7 @@ void vector_audio::modals::Settings::render(afv_native::api::atcClient* mClient,
                     shared::capture_ptt_flag = true;
                 }
             }
-            vector_audio::style::button_reset_colour();
+            vector_audio::style::PopFrameStyle();
 
             ImGui::NewLine();
 
@@ -373,7 +372,7 @@ void vector_audio::modals::Settings::render(afv_native::api::atcClient* mClient,
 
             ImGui::NewLine();
 
-            vector_audio::style::button_purple();
+            vector_audio::style::PushFrameStyle(vector_audio::style::FrameNormal);
             const char* audio_test_button_text = mClient->IsAudioRunning()
                 ? "Stop Mic Test"
                 : "Start Mic Test";
@@ -392,7 +391,7 @@ void vector_audio::modals::Settings::render(afv_native::api::atcClient* mClient,
                     mClient->StartAudio();
                 }
             }
-            vector_audio::style::button_reset_colour();
+            vector_audio::style::PopFrameStyle();
 
             vector_audio::style::dualVUMeter(
                 1 - (vector_audio::shared::mVu / -40.F),
@@ -424,7 +423,7 @@ void vector_audio::modals::Settings::render(afv_native::api::atcClient* mClient,
 
             ImGui::SameLine();
 
-            vector_audio::style::button_green();
+            vector_audio::style::PushFrameStyle(vector_audio::style::FramePrimary);
             if (ImGui::Button(
                     "Save", ImVec2(ImGui::GetContentRegionAvail().x, 0.0F))) {
                 vector_audio::Configuration::config_["user"]["vatsim_id"]
@@ -449,7 +448,7 @@ void vector_audio::modals::Settings::render(afv_native::api::atcClient* mClient,
 
                 shared::capture_ptt_flag = false;
             }
-            vector_audio::style::button_reset_colour();
+            vector_audio::style::PopFrameStyle();
 
             ImGui::EndTable();
         }

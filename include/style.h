@@ -4,144 +4,63 @@
 #include <limits>
 
 namespace vector_audio::style {
-inline static void button_yellow()
-{
-    ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(1 / 7.0F, 0.6f, 0.6f).Value);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(1 / 7.0F, 0.7f, 0.7f).Value);
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(1 / 7.0F, 0.8f, 0.8f).Value);
+enum FrameType {
+    FrameNormal = 0,
+    FrameSelected,
+    FramePrimary,
+    FrameRadio,
+    FrameTypeCount,
 };
 
-inline static void button_blue()
-{
-    ImGui::PushStyleColor(ImGuiCol_Button, ImColor(34, 107, 201).Value);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.12f, 0.20f, 0.28f, 1.00f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.06f, 0.53f, 0.98f, 1.00f));
+enum TextType {
+    TextNormal = 0,
+    TextBright,
+    TextFailure,
+    TextSuccess,
+    TextLink,
+    TextTypeCount,
 };
 
+static const ImColor backdrop = ImColor::HSV(8 / 14.f, 0.3f, 0.15f);
 
-inline static void button_green()
-{
-    ImGui::PushStyleColor(ImGuiCol_Button, ImColor(30, 140, 45).Value);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(2 / 7.0F, 0.7f, 0.7f).Value);
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(2 / 7.0F, 0.8f, 0.8f).Value);
+static const ImColor frame_normal[FrameTypeCount] = {
+    ImColor::HSV(8 / 14.f, 0.3f, 0.2f),
+    ImColor::HSV(8 / 14.f, 0.8f, 0.5f),
+    ImColor::HSV(5 / 14.f, 0.8f, 0.5f),
+    ImColor::HSV(2 / 14.f, 0.6f, 0.6f)
 };
 
-inline static void button_purple()
-{
-    ImGui::PushStyleColor(ImGuiCol_Button, ImColor::HSV(5 / 7.0F, 0.6F, 0.6F).Value);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImColor::HSV(5 / 7.0F, 0.7F, 0.7F).Value);
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImColor::HSV(5 / 7.0F, 0.8F, 0.8F).Value);
+static const ImColor frame_hover[FrameTypeCount] = {
+    ImColor::HSV(8 / 14.f, 0.3f, 0.3f),
+    ImColor::HSV(8 / 14.f, 0.8f, 0.6f),
+    ImColor::HSV(5 / 14.f, 0.8f, 0.6f),
+    ImColor::HSV(2 / 14.f, 0.6f, 0.7f)
 };
 
-inline static void button_reset_colour()
-{
-    ImGui::PopStyleColor(3);
+static const ImColor frame_active[FrameTypeCount] = {
+    ImColor::HSV(8 / 14.f, 0.3f, 0.4f),
+    ImColor::HSV(8 / 14.f, 0.8f, 0.7f),
+    ImColor::HSV(5 / 14.f, 0.8f, 0.7f),
+    ImColor::HSV(2 / 14.f, 0.6f, 0.8f)
 };
 
-inline static void push_disabled_on(bool flag)
-{
-    if (!flag) return;
-
-    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5);
+static const ImColor text[TextTypeCount] = {
+    ImColor(1.f, 1.f, 1.f, 0.75f),
+    ImColor(1.f, 1.f, 1.f, 1.f),
+    ImColor::HSV(0 / 14.f, 0.8f, 0.8f),
+    ImColor::HSV(5 / 14.f, 0.8f, 0.8f),
+    ImColor::HSV(8 / 14.f, 0.8f, 0.8f)
 };
 
-inline static void pop_disabled_on(bool flag)
-{
-    if (!flag) return;
+void PushFrameStyle(const FrameType i, bool interactive = true);
+void PopFrameStyle();
+void PushTextStyle(const TextType i);
+void PopTextStyle();
+void push_disabled_on(bool flag);
+void pop_disabled_on(bool flag);
 
-    ImGui::PopItemFlag();
-    ImGui::PopStyleVar();
-};
+void UnroundCorners(char cw, bool button, bool interactive = true, float radius = 0.f);
+void dualVUMeter(float fractionVu, float fractionPeak, const ImVec2& size_arg, ImColor vuColor, ImColor peakColor);
 
-inline static float Saturate(float value) {
-    return std::min(std::max(value, 0.0f), 1.0f);
-}
-
-inline static void dualVUMeter(float fractionVu, float fractionPeak, const ImVec2& size_arg, ImColor vuColor, ImColor peakColor)
-{
-    ImGuiWindow* window = ImGui::GetCurrentWindow();
-    if (window->SkipItems)
-        return;
-
-    ImGuiContext& g = *GImGui;
-    const ImGuiStyle& style = g.Style;
-
-    ImVec2 pos = window->DC.CursorPos;
-    ImVec2 size = ImGui::CalcItemSize(size_arg, ImGui::CalcItemWidth(), g.FontSize + style.FramePadding.y * 2.0f);
-    ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
-    ImGui::ItemSize(size, style.FramePadding.y);
-    if (!ImGui::ItemAdd(bb, 0))
-        return;
-
-    ImDrawList *dl = ImGui::GetWindowDrawList();
-
-    // Render
-    
-    fractionVu = Saturate(fractionVu);
-    fractionPeak = Saturate(fractionPeak);
-    ImGui::RenderFrame(bb.Min, bb.Max, ImGui::GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
-    bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
-
-    ImVec2 fill_br = ImVec2(ImLerp(bb.Min.x, bb.Max.x, fractionPeak), bb.Max.y);
-    ImGui::RenderRectFilledRangeH(window->DrawList, bb, peakColor, 0.0f, fractionPeak, style.FrameRounding);
-
-    fill_br = ImVec2(ImLerp(bb.Min.x, bb.Max.x, fractionVu), bb.Max.y);
-    ImGui::RenderRectFilledRangeH(window->DrawList, bb, vuColor, 0.0f, fractionVu, style.FrameRounding);
-}
-
-inline static void apply_style()
-{
-    ImGui::GetStyle().FrameRounding = 4.0F;
-    ImGui::GetStyle().GrabRounding = 4.0F;
-
-    ImVec4* colors = ImGui::GetStyle().Colors;
-    colors[ImGuiCol_Text] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
-    colors[ImGuiCol_TextDisabled] = ImVec4(0.36f, 0.42f, 0.47f, 1.00f);
-    colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-    colors[ImGuiCol_ChildBg] = ImVec4(0.15f, 0.18f, 0.22f, 1.00f);
-    colors[ImGuiCol_PopupBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-    colors[ImGuiCol_Border] = ImVec4(0.08f, 0.10f, 0.12f, 1.00f);
-    colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-    colors[ImGuiCol_FrameBg] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.12f, 0.20f, 0.28f, 1.00f);
-    colors[ImGuiCol_FrameBgActive] = ImVec4(0.09f, 0.12f, 0.14f, 1.00f);
-    colors[ImGuiCol_TitleBg] = ImVec4(0.09f, 0.12f, 0.14f, 0.65f);
-    colors[ImGuiCol_TitleBgActive] = ImVec4(0.08f, 0.10f, 0.12f, 1.00f);
-    colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-    colors[ImGuiCol_MenuBarBg] = ImVec4(0.15f, 0.18f, 0.22f, 1.00f);
-    colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.39f);
-    colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.18f, 0.22f, 0.25f, 1.00f);
-    colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.09f, 0.21f, 0.31f, 1.00f);
-    colors[ImGuiCol_CheckMark] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
-    colors[ImGuiCol_SliderGrab] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
-    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.37f, 0.61f, 1.00f, 1.00f);
-    colors[ImGuiCol_Button] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_ButtonHovered] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
-    colors[ImGuiCol_ButtonActive] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
-    colors[ImGuiCol_Header] = ImVec4(0.20f, 0.25f, 0.29f, 0.55f);
-    colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-    colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-    colors[ImGuiCol_Separator] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_SeparatorHovered] = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
-    colors[ImGuiCol_SeparatorActive] = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
-    colors[ImGuiCol_ResizeGrip] = ImVec4(0.26f, 0.59f, 0.98f, 0.25f);
-    colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-    colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-    colors[ImGuiCol_Tab] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-    colors[ImGuiCol_TabHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-    colors[ImGuiCol_TabActive] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    colors[ImGuiCol_TabUnfocused] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-    colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-    colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
-    colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-    colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-    colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-    colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-    colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
-    colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-    colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
-    colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
-}
+void apply();
 }

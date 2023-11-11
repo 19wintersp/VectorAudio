@@ -88,6 +88,7 @@ inline bool isPttOpen = false;
 
 inline std::vector<StationElement> FetchedStations;
 inline bool bootUpVccs = false;
+inline unsigned int last_rx_close = 0;
 
 // Temp inputs
 inline std::string station_add_callsign = "";
@@ -123,7 +124,7 @@ namespace session {
     inline double latitude;
     inline double longitude;
 
-    inline std::string callsign = "Not connected";
+    inline std::string callsign = "No connection";
     inline int frequency;
 }
 }

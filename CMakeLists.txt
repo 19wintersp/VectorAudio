@@ -93,11 +93,12 @@ add_executable(vector_audio ${GUI_TYPE} src/main.cpp
                 ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_stdlib.cpp
                 src/application.cpp
                 src/config.cpp
+                src/data_file_handler.cpp
+                src/single_instance.cpp
+                src/style.cpp
                 src/updater.cpp
                 src/window_manager.cpp
-                src/data_file_handler.cpp
                 src/modals/settings.cpp
-                src/single_instance.cpp
                 ${CMAKE_SOURCE_DIR}/extern/PlatformFolders/sago/platform_folders.cpp
                 ${APPLE_EXTRA_LIBS}
                 vector_audio.rc)
@@ -133,7 +134,7 @@ if(APPLE)
 		${AUDIO_UNIT}
 		${CORE_FOUNDATION}
 		${CORE_SERVICES})
-    
+
     #afv
     find_library(LIB_AFV afv_native PATHS ${CMAKE_SOURCE_DIR}/lib/macos/ NO_DEFAULT_PATH)
     if(NOT LIB_AFV)

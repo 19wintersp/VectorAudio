@@ -93,7 +93,7 @@ int main(int, char**)
 
     // Our state
 
-    vector_audio::style::apply_style();
+    vector_audio::style::apply();
     vector_audio::Configuration::build_config();
 
     spdlog::info("Starting VectorAudio...");

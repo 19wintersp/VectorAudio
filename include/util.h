@@ -1,6 +1,7 @@
 #pragma once
 #include "imgui.h"
 #include "shared.h"
+#include "style.h"
 #include <SFML/Audio/Sound.hpp>
 #include <SFML/Audio/SoundBuffer.hpp>
 #include <SFML/Window/Keyboard.hpp>
@@ -49,6 +50,7 @@ inline void AddUnderLine(ImColor col_)
 static void HelpMarker(const char* desc)
 {
     ImGui::TextDisabled("(?)");
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImGui::GetStyle().FramePadding);
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)
         && ImGui::BeginTooltip()) {
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0F);
@@ -56,6 +58,7 @@ static void HelpMarker(const char* desc)
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
     }
+    ImGui::PopStyleVar();
 }
 
 // https://stackoverflow.com/questions/64653747/how-to-center-align-text-horizontally
@@ -142,18 +145,19 @@ inline int round8_33kHzChannel(int fKHz)
 
 inline void TextURL(const std::string& name_, std::string URL_)
 {
-    ImGui::PushStyleColor(
-        ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
+    ImGui::PushStyleColor(ImGuiCol_Text, style::text[style::TextLink].Value);
     ImGui::TextUnformatted(name_.c_str());
     ImGui::PopStyleColor();
 
     if (ImGui::IsItemHovered()) {
         if (ImGui::IsMouseClicked(0)) {
             util::PlatformOpen(std::move(URL_));
+            AddUnderLine(style::text[style::TextBright]);
+        } else {
+            AddUnderLine(style::text[style::TextNormal]);
         }
-        AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
     } else {
-        AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_Button]);
+        AddUnderLine(style::text[style::TextLink]);
     }
 }
 
